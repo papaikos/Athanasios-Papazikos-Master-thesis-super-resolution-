@@ -12,6 +12,7 @@ This repository holds everything needed to repeat the thesis experiments on **po
 ## Contents
 - [What the thesis does](#what-the-thesis-does)
 - [Results](#results)
+- [Marine gallery](#marine-gallery)
 - [Repository layout](#repository-layout)
 - [Installation](#installation)
 - [Pre-trained weights](#pre-trained-weights)
@@ -61,6 +62,29 @@ Ports and coasts gain the most. Open sea is mostly texture-free water and gains 
   <br><sub>A validation image of the oil port of Al Burayqah, Libya (harbour basin, jetty and quay). Top: ×4 with the D3 model. Bottom: ×10 with the D3x10 model. The LR inputs are synthetic, so the HR reference exists. Imagery: Maxar Open Data, CC BY-NC 4.0.</sub>
 </p>
 
+## Marine gallery
+**Validation images.** These have a synthetic LR input, so the HR reference exists. Each crop is 48 × 48 LR pixels (480 m). The models are the best D3 (×4) and D3x10 (×10) checkpoints.
+
+<p align="center">
+  <img src="docs/images/gallery/val_x4_port_vila_marina.png" alt="Marina canals at Port Vila, x4: LR, bicubic, SwinIR D3, HR" width="100%">
+  <img src="docs/images/gallery/val_x10_port_vila_marina.png" alt="Marina canals at Port Vila, x10: LR, bicubic, SwinIR D3x10, HR" width="100%">
+  <img src="docs/images/gallery/val_x10_port_vila_anchorage.png" alt="Boats at anchor near Port Vila, x10: LR, bicubic, SwinIR D3x10, HR" width="100%">
+  <img src="docs/images/gallery/val_x4_montego_bay_moorings.png" alt="Moored boats at Montego Bay, x4: LR, bicubic, SwinIR D3, HR" width="100%">
+  <img src="docs/images/gallery/val_x4_manila_container_port.png" alt="Container terminal in the port of Manila, x4: LR, bicubic, SwinIR D3, HR" width="100%">
+  <img src="docs/images/gallery/val_x4_moroni_harbour.png" alt="Harbour basin and breakwater at Moroni, x4: LR, bicubic, SwinIR D3, HR" width="100%">
+  <br><sub>Imagery: Maxar Open Data, CC BY-NC 4.0.</sub>
+</p>
+
+**Real Sentinel-2 ports.** These are real 10 m inputs, so no high-resolution reference exists and the added detail is predicted.
+
+<p align="center">
+  <img src="docs/images/gallery/s2_barcelona_marina.png" alt="Barcelona marina, Sentinel-2 with SwinIR D3 x4 and D3x10 x10" width="75%">
+  <img src="docs/images/gallery/s2_monaco_port.png" alt="Port Hercule, Monaco, Sentinel-2 with SwinIR D3 x4 and D3x10 x10" width="75%">
+  <img src="docs/images/gallery/s2_marseille_old_port.png" alt="Old Port of Marseille, Sentinel-2 with SwinIR D3 x4 and D3x10 x10" width="75%">
+  <img src="docs/images/gallery/s2_genoa_docks.png" alt="Docks of the port of Genoa, Sentinel-2 with SwinIR D3 x4 and D3x10 x10" width="75%">
+  <br><sub>Contains modified Copernicus Sentinel data.</sub>
+</p>
+
 ## Repository layout
 ```
 dataset/                 1. Data preparation
@@ -76,7 +100,7 @@ evaluation/              4. Validation and prediction
   predict.py             super-resolve any RGB image with a released model
   comparisons/           Sentinel-2 and SkySat comparisons used in the thesis
   analysis/              bootstrap intervals, per-scene and per-site tables
-docs/images/             the images in this README
+docs/images/             the images in this README (gallery/: the marine gallery)
 release/                 SHA256SUMS and notes for the weights release
 ```
 
