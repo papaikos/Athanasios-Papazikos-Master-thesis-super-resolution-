@@ -12,7 +12,6 @@ The scripts write next to themselves, so run them from this folder. None of thes
 | Shards, `manifest.json`, `samples.csv` | `Maritime_D3x10_1m10m/{train,validation,test}/d3x10-<split>-NNNNN.tar` |
 | Rejected pairs (rules_v5: 1,211, minus 88 restored by manual review = 1,123) | `rejected/` (byte-identical NPZs, `rejected_samples.csv`, `policy.json`) |
 | Each build run | `runs/<UTC>_<full\|dryrun>/`: `run.json` (args, environment, input SHA-256s), `shard_plan.json`, `script_snapshot.py`, `progress.log`, `records/` (one JSON per shard), `errors.jsonl`, `summary.json`, `samples.csv`, `manifest.json`, `verify_*.json` |
-| Build history | `docs/d3x10_build_notebook.md` |
 
 ## Each sample (`<sample_id>.npz` inside a shard)
 - `hr`: uint8 (3, 1280, 1280), 1 m, the 1,280 m core of the Mother tile

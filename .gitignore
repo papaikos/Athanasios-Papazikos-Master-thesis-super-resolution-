@@ -44,10 +44,6 @@ quality_check/decisions/*
 !quality_check/decisions/rules_v5/
 quality_check/thesis_data/
 quality_check/exploration/
-experiments/sentinel1_despeckle/data/
-experiments/sentinel1_despeckle/out/
-tools/viewers/*.json
-tools/viewers/judged.txt
 
 # --- Python ---
 __pycache__/
