@@ -1,0 +1,22 @@
+# Core environment: training (x4, x10), evaluation, predict.py and analysis.
+# Versions are the ones used by the thesis runs (Python 3.10, PyTorch 2.5.1 + CUDA 12.4 on an A100).
+# The exact cluster freeze is training/x4/ops/requirements-lock-d2.txt.
+# For CPU only, drop the extra index line; predict.py also works with newer PyTorch.
+--extra-index-url https://download.pytorch.org/whl/cu124
+torch==2.5.1
+torchvision==0.20.1
+numpy==2.2.6
+scipy==1.15.3
+PyYAML==6.0.3
+timm==1.0.20
+lpips==0.1.4
+pillow==12.3.0
+matplotlib==3.10.6
+tensorboard==2.20.0
+psutil==7.1.0
+google-crc32c==1.9.0
+google-cloud-storage==3.4.0
+pytest==8.4.2
+# D3x10 build, SkySat preparation and the analysis scripts
+pandas
+rasterio

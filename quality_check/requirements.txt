@@ -1,0 +1,8 @@
+# Jev check (judge / decide) and the thesis tables. Versions from the original run environment.
+typesafe-sdk==0.7.5
+httpx2==2.13.1
+numpy
+pillow==12.3.0
+pandas
+matplotlib
+pyproj

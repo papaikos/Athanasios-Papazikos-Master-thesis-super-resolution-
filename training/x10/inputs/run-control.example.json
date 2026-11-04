@@ -1,0 +1,20 @@
+{
+  "run_id": "d3x10-swinir-x10-s42-100k-20261021",
+  "experiment": "maritime-d3x10-swinir-x10-100k-v1",
+  "t0_utc": "2026-10-21T07:13:44.846343+00:00",
+  "project": "<PROJECT_DIR>",
+  "base": "<SCRATCH_DIR>",
+  "data_root": "<DATA_DIR>",
+  "data_pins": {
+    "manifest_sha256": "851422f6efddc7c8a63c6d17b2aec89f0c203ef7bdd79b5fdee385c68faa8b84",
+    "samples_csv_sha256": "04a63ee648abc2dc1d3b25e7305c7064cc3ed7f4180d944e26319bcca06d789a"
+  },
+  "user_decisions": {
+    "recipe": "same as D1-D3 (batch 16, 64x64 LR crops, schedule), faster execution",
+    "gpus": "1 A100",
+    "x10_head": "x2 then x5 pixel-shuffle",
+    "init": "from scratch",
+    "updates": 100000,
+    "retention": "best and latest checkpoints only"
+  }
+}

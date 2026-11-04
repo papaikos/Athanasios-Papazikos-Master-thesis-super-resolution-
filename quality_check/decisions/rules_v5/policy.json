@@ -1,0 +1,37 @@
+{
+  "name": "rules_v5_full_mother",
+  "created_utc": "2026-10-20T10:58:45Z",
+  "run_dir": "runs/2026-10-19_072143Z_full_mother",
+  "run_status": "complete",
+  "judgments_sha256": "b4208f50672f2f8d2aaf9c0a6eb72d3080a075b98909d6b78eefee45872072a4",
+  "images": 18194,
+  "rules": {
+    "remove": [
+      "defect_<name>: nodata Noul > 0.7",
+      "defect_<name>: seams Noul > 0.6",
+      "defect_<name>: color_artifacts Noul > 0.75",
+      "mostly_clouds: P(clouds level 3 or 4, i.e. more than half covered) >= 0.5"
+    ],
+    "candidates_not_removed": [
+      "featureless_open_sea: max(shoreline, vessels, port_structures) <= 0.3, or < 0.7 with water < 0.5, and scene is open_sea",
+      "inland: max(shoreline, vessels, port_structures) <= 0.3, or < 0.7 with water < 0.5, and scene is not open_sea",
+      "uncertain_maritime_subject: 0.3 < max(shoreline, vessels, port_structures) < 0.7 with water >= 0.5"
+    ]
+  },
+  "thresholds": {
+    "DEFECT_REMOVE": {
+      "nodata": 0.7,
+      "seams": 0.6,
+      "color_artifacts": 0.75
+    },
+    "CLOUDS_MOSTLY": [
+      "3",
+      "4"
+    ],
+    "CLOUDS_REMOVE": 0.5,
+    "YES": 0.7,
+    "NO": 0.3,
+    "UNCERTAIN_WATER_MIN": 0.5
+  },
+  "note": "remove_list.txt and candidates_*.txt only list image names; nothing in the dataset is removed or changed. Candidate lists hold kept images only."
+}
