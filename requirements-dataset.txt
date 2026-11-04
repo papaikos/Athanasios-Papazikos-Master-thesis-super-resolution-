@@ -10,11 +10,9 @@ pandas
 pyarrow
 rasterio
 shapely
-pyproj
 affine
 requests
 pytest
 earthengine-api
 google-cloud-storage
 google-crc32c
-planetary-computer

@@ -64,8 +64,8 @@ Ports and coasts gain the most. Open sea is mostly texture-free water and gains 
 ## Repository layout
 ```
 dataset/                 1. Data preparation
-  src/  scripts/         frozen dataset package: acquisition, screening, D1/D2/D3 recipes,
-  configs/ tests/        uint8 release, loader (MaritimeUint8Dataset)
+  src/  scripts/         source intake, D1/D2/D3 recipes, release build, uint8 release,
+  configs/ tests/        loaders (MaritimeUint8Dataset), Sentinel-2 inputs
   d3x10/                 build, Jev-based rejection and manual restore of the x10 dataset
 quality_check/           2. Jev check (TypeSafe Jev): judge, decide, contact sheets, thesis tables
   decisions/rules_v5/    final policy and the list of the 1,123 removed tiles
@@ -76,10 +76,7 @@ evaluation/              4. Validation and prediction
   predict.py             super-resolve any RGB image with a released model
   comparisons/           Sentinel-2 and SkySat comparisons used in the thesis
   analysis/              bootstrap intervals, per-scene and per-site tables
-baselines/               released DiffusionSat / SEN2SR and fine-tuned SEN2SR / SwinIR baselines
-experiments/sentinel1_despeckle/   SAR2SAR vs SAR-BM3D on Sentinel-1 port scenes (appendix)
-tools/viewers/           npz_viewer.pyw and judge_app.pyw: Tk viewers for HR/LR .npz tiles
-docs/                    training protocol, LPIPS notes, lab notebooks, images
+docs/images/             the images in this README
 release/                 SHA256SUMS and notes for the weights release
 ```
 
@@ -98,9 +95,7 @@ pip install -r requirements.txt
 | `requirements.txt` | training, evaluation, `predict.py`, analysis |
 | `requirements-dataset.txt` | building the dataset (Earth Engine, Google Cloud Storage, rasterio, …) |
 | `quality_check/requirements.txt` | the Jev check |
-| `experiments/sentinel1_despeckle/requirements.txt` | the Sentinel-1 appendix |
 | `training/x4/ops/requirements-lock-d2.txt` | exact `pip freeze` of the cluster runs (torch 2.5.1 + CUDA 12.4) |
-| `baselines/requirements-*.txt` | the baseline models |
 
 Settings live in environment variables, not in the code. Copy `.env.example` to `.env`, fill in what you need, then load it:
 
@@ -135,12 +130,15 @@ curl -L -o weights/swinir_x4_D3_best_step82000.pth https://github.com/papaikos/A
 ## Pipeline
 
 ### 1. Data preparation (`dataset/`)
-`dataset/` is the frozen dataset package used by every run. Run it from that folder with `PYTHONPATH` set to it. Imports look like `from src.maritime_uint8_dataset import MaritimeUint8Dataset`.
+`dataset/` holds the parts of the dataset package that the final release used. Run it from that folder with `PYTHONPATH` set to it. Imports look like `from src.maritime_uint8_dataset import MaritimeUint8Dataset`.
 
-- **Acquisition and screening** (`scripts/maritime_*_intake.py`, `maritime_catalog_screen.py`, `maritime_canonical_screening.py`, …). These collect maritime candidates from Maxar Open Data, EarthView, aerial orthophotos and SkySat, then screen them. They need your own Google Cloud project, Earth Engine access and buckets (`GCP_PROJECT`, `GCS_BUCKET`, `GCS_PILOT_BUCKET`).
-- **Release** (`maritime_ultimate_select.py`, `maritime_ultimate_release.py`, `maritime_uint8_release.py`). These choose the final tiles and splits, apply the D1/D2/D3 recipes from `src/maritime_recipes.py`, and write uint8 TAR shards with manifests.
+- **Source intake** (`scripts/maritime_maxar_intake.py`, `maritime_earthview_intake.py`, `maritime_planet_intake.py`, `maritime_noaa_intake.py`, `maritime_academic_raster_intake.py`, and the readers in `src/maritime_*_source.py`). These read the original Maxar Open Data, EarthView, aerial and SkySat pixels for the selected tiles. They need your own Google Cloud project, Earth Engine access and buckets (`GCP_PROJECT`, `GCS_BUCKET`, `GCS_PILOT_BUCKET`).
+- **Release** (`maritime_ultimate_select.py`, `maritime_release_select.py`, `maritime_release_build.py`, `maritime_ultimate_release.py`, `maritime_uint8_release.py`). These choose the final tiles and splits, apply the D1/D2/D3 recipes from `src/maritime_recipes.py`, and write uint8 TAR shards with manifests.
 - **Loading.** `src/maritime_uint8_dataset.py` returns `lr [N,3,128,128]` and `hr [N,3,512,512]`, already converted to float RGB in [0, 1]. Do not divide by 255 again.
+- **Sentinel-2 inputs** (`scripts/acquire_sentinel_examples.py`, `acquire_sentinel30_examples.py`). These download the real Sentinel-2 port scenes used in the comparisons.
 - **Tests.** Run `pytest dataset/tests`.
+
+The earlier pilots and the candidate screening and review tools are not in the current tree. They are in the git history (commit `54972b9`).
 
 ### 2. Jev check (`quality_check/`)
 Set `TYPESAFE_API_KEY` in the environment; the key is never written into a file or a log.
@@ -202,12 +200,8 @@ The input is an 8-bit RGB image (for example a Sentinel-2 TCI crop at 10 m) or a
 
 `evaluation/comparisons/` holds the scripts that produced the thesis comparisons: 20 Sentinel-2 port scenes and 10 SkySat scenes with synthetic ×4/×10 inputs, for D1, D2, D3 and D3x10. They expect a run archive folder (`RUN_ARCHIVE`, `D3_ARCHIVE`). `evaluation/analysis/` rebuilds the thesis tables from those archives (`MARITIME_ARCHIVE_ROOT`). See [`evaluation/README.md`](evaluation/README.md).
 
-### 6. Baselines and appendix
-- [`baselines/`](baselines/README.md): the released DiffusionSat (fMoW Sentinel → RGB ControlNet) and SEN2SR models on 15 Sentinel-2 port scenes, plus a short fine-tuning pilot of SEN2SR and SwinIR. The scripts are in `dataset/scripts/`.
-- [`experiments/sentinel1_despeckle/`](experiments/sentinel1_despeckle/README.md): SAR2SAR and SAR-BM3D despeckling of Sentinel-1 port and strait scenes (appendix).
-
 ## Data availability and licences
-- **Dataset.** The dataset (about 290 GB of TAR shards and GeoTIFFs) is not part of this repository. The code above rebuilds it from the original sources, given your own access. Each tile keeps its source's licence in its provenance record. Examples: Maxar Open Data is CC BY-NC 4.0, and SkySat imagery is under Planet's terms.
+- **Dataset.** The dataset (about 290 GB of TAR shards and GeoTIFFs) is not part of this repository. The code above shows how the release was built from the original sources. Rerunning it needs your own cloud access and the candidate lists from the earlier screening steps. Each tile keeps its source's licence in its provenance record. Examples: Maxar Open Data is CC BY-NC 4.0, and SkySat imagery is under Planet's terms.
 - **Weights.** The model weights are released for research use. They were trained on that data, so the data licences still apply.
 - **Code.** The code is under the [Apache 2.0 licence](LICENSE). SwinIR (`training/*/source/vendor/network_swinir.py`) is © Jingyun Liang, Apache 2.0 (see `SwinIR-LICENSE` next to it).
 - **Not included.** The thesis text is not included.

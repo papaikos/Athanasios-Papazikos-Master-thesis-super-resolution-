@@ -1,8 +1,0 @@
-deepdespeckling==0.8
-bm3d==4.0.3
-numpy
-scipy
-pillow
-planetary-computer
-pystac-client
-rasterio

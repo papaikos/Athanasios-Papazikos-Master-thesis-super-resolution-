@@ -3,7 +3,6 @@
 This folder checks every HR tile of the maritime dataset (Mother, 18,194 tiles) with the TypeSafe Jev vision model. Jev answers questions about clouds, no-data areas, seams, colour artefacts, scene type, vessels and port structures.
 - **The dataset is only read, never changed.** The results are lists of image names (`remove_list.txt`, `candidates_*.txt`).
 - Mother and D1/D2/D3 share image IDs, so one list applies to all of them.
-- The full history and the reason for each decision are in [`docs/jev_check_notebook.md`](../docs/jev_check_notebook.md).
 
 ## Final decision (2026-10-20): rules v5 plus manual corrections
 - **Folder:** `decisions/rules_v5/`. Start with `MANUAL_CORRECTIONS.md`.
