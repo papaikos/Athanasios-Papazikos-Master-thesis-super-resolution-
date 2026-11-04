@@ -1,0 +1,69 @@
+data:
+  dataset: D3x10 1m/10m (rules_v5_d3x10 rejection + 88 manual restores)
+  recipe: d3x10-variable-psf-noise-v1
+  test: sealed, not on AUTH
+  train: 16835
+  validation: 115
+experiment: maritime-d3x10-swinir-x10-100k-v1
+initialization: random_from_scratch
+model:
+  ape: false
+  attn_drop_rate: 0.0
+  depths:
+  - 6
+  - 6
+  - 6
+  - 6
+  - 6
+  - 6
+  drop_path_rate: 0.1
+  drop_rate: 0.0
+  embed_dim: 180
+  img_range: 1.0
+  img_size: 64
+  in_chans: 3
+  mlp_ratio: 2.0
+  num_heads:
+  - 6
+  - 6
+  - 6
+  - 6
+  - 6
+  - 6
+  patch_norm: true
+  patch_size: 1
+  qk_scale: null
+  qkv_bias: true
+  resi_connection: 1conv
+  upsampler: pixelshuffle
+  upscale: 10
+  use_checkpoint: false
+  window_size: 8
+  x10_head: x2-then-x5-pixelshuffle-v1
+optimizer:
+  betas:
+  - 0.9
+  - 0.99
+  eps: 1.0e-08
+  lr_peak: 0.0002
+  name: Adam
+  weight_decay: 0.0
+schema: 1
+seed: 42
+training:
+  accumulation_steps: 1
+  deterministic_algorithms: false
+  early_stopping: false
+  effective_batch_size: 16
+  ema: false
+  gradient_clipping: false
+  hr_crop_size: 640
+  loss: masked_l1
+  lr_crop_size: 64
+  microbatch_size: 16
+  min_lr: 1.0e-06
+  precision: bf16
+  scale: 10
+  target_updates: 100000
+  tf32: false
+  warmup_updates: 2000

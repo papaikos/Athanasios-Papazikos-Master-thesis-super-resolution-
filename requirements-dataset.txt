@@ -1,0 +1,20 @@
+# Dataset construction (dataset/scripts, dataset/src). The frozen package was verified with
+# Python 3.11, torch 2.5.1+cpu, numpy 1.26.4 and scipy 1.14.1. The cloud packages are only
+# needed for the acquisition and release scripts, which also need your own Google Cloud
+# project, Earth Engine access and buckets (see .env.example).
+torch==2.5.1
+numpy==1.26.4
+scipy==1.14.1
+pillow
+pandas
+pyarrow
+rasterio
+shapely
+pyproj
+affine
+requests
+pytest
+earthengine-api
+google-cloud-storage
+google-crc32c
+planetary-computer

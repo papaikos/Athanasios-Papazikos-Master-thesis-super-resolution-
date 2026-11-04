@@ -1,0 +1,57 @@
+schema: 1
+experiment: maritime-d3-swinir-confirmation-100k-v1
+seed: 42
+initialization: random_from_scratch
+model:
+  in_chans: 3
+  upscale: 4
+  img_size: 64
+  patch_size: 1
+  window_size: 8
+  embed_dim: 180
+  depths:
+  - 6
+  - 6
+  - 6
+  - 6
+  - 6
+  - 6
+  num_heads:
+  - 6
+  - 6
+  - 6
+  - 6
+  - 6
+  - 6
+  mlp_ratio: 2.0
+  qkv_bias: true
+  qk_scale: null
+  drop_rate: 0.0
+  attn_drop_rate: 0.0
+  drop_path_rate: 0.1
+  ape: false
+  patch_norm: true
+  use_checkpoint: false
+  img_range: 1.0
+  upsampler: pixelshuffle
+  resi_connection: 1conv
+optimizer:
+  name: Adam
+  lr_peak: 0.0002
+  betas:
+  - 0.9
+  - 0.99
+  eps: 1.0e-08
+  weight_decay: 0.0
+training:
+  target_updates: 100000
+  warmup_updates: 2000
+  min_lr: 1.0e-06
+  effective_batch_size: 16
+  lr_crop_size: 64
+  hr_crop_size: 256
+  loss: masked_l1
+  precision: bf16
+  ema: false
+  early_stopping: false
+  gradient_clipping: false

@@ -1,0 +1,28 @@
+{
+  "schema": "d1-local-input-pins-v1",
+  "index": {
+    "bytes": 8075,
+    "sha256": "0888d9772668b6cfe3b36f952dbffdaede4f887bf59dfff561b5b8903829c6bc",
+    "crc32c": "+K9b5w=="
+  },
+  "main_manifest": {
+    "bytes": 824241032,
+    "crc32c": "I4kPCA==",
+    "generation": "1791487656456599",
+    "sha256": "354de93bf1ea74e64cf61be797a85cd17ed8b4a06014dd1a7a5795b40e277215",
+    "uri": "gs://my-maritime-rgb-bucket/maritime-rgb/expansion-20261007/releases/maritime-uint8-expanded-20261008-v1/d1/manifest.json"
+  },
+  "auxiliary_manifest": {
+    "bytes": 1113064,
+    "crc32c": "NPKOJw==",
+    "generation": "1791446854152783",
+    "sha256": "78f5b652403afd275d8d50e2b2c53f63d17a99a05262799a8379ead4d167c796",
+    "uri": "gs://my-maritime-rgb-bucket/maritime-rgb/expansion-20261007/aerial-auxiliary-evaluation-positive63-v1/d1/manifest.json"
+  },
+  "download_receipt": {
+    "bytes": 2001,
+    "sha256": "e7c150038cc6050fcd5d1f202e7b202f5eb65eaae92ff3b9dd1a97faf367eebb",
+    "crc32c": "jqA7zQ=="
+  },
+  "policy": "SHA256, size and CRC32C verified locally; generation and URI are historical provenance only. Mother payloads are never selected."
+}

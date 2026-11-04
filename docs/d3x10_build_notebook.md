@@ -1,0 +1,174 @@
+# D3x10 lab notebook
+
+All times UTC. Entries are appended, never rewritten.
+
+## 2026-10-20
+
+- **Decision (user):** after the D1/D2/D3 (×4) training runs, use the D3 recipe for the final dataset at 1 m HR / 10 m LR (×10). Include every sample, flag the native-1 m ones, and keep all Jev data as columns so exclusions can be decided later. Build only the 1 m / 10 m pairs.
+- **Finding:** Mother TARs hold only 2.5 m arrays. The 1 m pixels come from `Mother/native/objects` (15,285 GeoTIFFs, 182 GB, all local). Every sample's context is 1,360 m (1,280 m core + 40 m halo), so: HR 1,280² at 1 m, LR 128² at 10 m, and the same LR grid as D1–D3.
+- **Native resolution:** in train, 10,417 of 17,952 samples are native 1.0 m (EarthView 6,466; NAIP 3,951), 3,399 are SkySat 0.8 m, and the rest are 0.25–0.89 m. Validation (115) and test (127) are all Maxar at 0.32–0.74 m. EarthView natives are all uint16 TOA; everything else is uint8.
+- **Pilot** (`pilot_2026-10-20/`, 8 samples covering every source type):
+  - native → 2.5 m reproduced Mother's context exactly (SkySat within 9e-8);
+  - the original D3 code reproduces the D3 shards bit for bit with numpy 2.4.6 / scipy 1.17.1;
+  - the ×10 LR is within 1–2 DN of D3's LR (57.6–71.8 dB);
+  - FFT convolution matches `ndimage.convolve` within 2.4e-7;
+  - each pair is 3.0–4.4 MB.
+- **Dry runs** `runs/2026-10-20_070114Z_dryrun` and `_070204Z_dryrun` (14 samples, all sources and splits):
+  - verify passed;
+  - geometry max error 8.9e-8;
+  - LR vs D3 at most 2 DN (59.8–70.9 dB);
+  - native-1 m HR is identical to the native pixels (4/4);
+  - the rebuild is byte-identical.
+  
+  The visual check (`pilot_2026-10-20/visual_check.png`: 10 m | D3 2.5 m | 1 m) shows the panels aligned, with boats resolved only at 1 m.
+- **Full build** started at 07:03 into `<local disk>\Maritime_D3x10_1m10m`: 285 shards of 64 samples (281 train, 2 validation, 2 test), 8 workers. Run folder: `runs/2026-10-20_*_full`.
+- **AUTH Aristotle** (`aristotle6`) is reachable over eduVPN using the D2 key and the pinned host key. Home quota is 100 GB, and `/home` is 93% full overall. NVMe scratch has 3.3 TB free. The `ampere` partition has 8× A100 with a 6 h limit.
+  - Upload test: 1.0 MB/s with one stream, 1.2 MB/s with four, so it is limited by the local upload link.
+  - Shards upload as they finish (`upload_d3x10.py`) to `<cluster scratch>/maritime-d3x10-20261020/`, each verified remotely by SHA-256.
+  - The test split stays local (sealed-test rule from the D1/D2 runs).
+- **Full build finished at 08:49:56** (`runs/2026-10-20_070346Z_full`), exit 0, no errors.
+  - 18,194 samples (train 17,952 / validation 115 / test 127) in 285 shards, 60.1 GB, with `manifest.json` and `samples.csv` in `<local disk>\Maritime_D3x10_1m10m`.
+  - Geometry max error vs Mother: 2.4e-7.
+  - LR vs D3: max 1 DN for 18,073 samples, 2 DN for 120, 3 DN for 1; PSNR 54.8–80.6 dB (mean 65.3).
+  - 10,417 samples flagged `native_gsd_ge_1m`. For 10,345 of them the HR is identical to the native pixels; the other 72 are NAIP 1 m tiles with a sub-pixel grid phase, so their HR is area-resampled.
+  - LR clipping fraction is identical to D3's (max 6.6%; 9 samples > 1%).
+  - Jev decisions: 16,987 keep / 1,207 remove (flag only).
+- **Verify at 08:52:** 285 shards and 18,194 samples read back. Every shard SHA-256, uint8 hash, shape, transform and member list matched, and `samples.csv` matched its SHA-256. 0 failures.
+- **Upload** at 08:50 is running at ~1.17 MB/s: 35 of 283 train/validation shards are verified on AUTH.
+- **Data moved at 09:03** (user request; OneDrive is deactivated): `<local disk>\Maritime_D3x10_1m10m` → `Desktop\D3x10 build\Maritime_D3x10_1m10m`.
+  - It was a same-drive rename: 287 files, 60.1 GB; the old path no longer exists. Run logs keep the original path as history.
+  - The uploader was stopped before the move, with 39 shards verified on AUTH. The shard that was mid-transfer is re-sent; its stale `.partial` is overwritten.
+  - Verify at the new location (09:06): 285 shards and 18,194 samples, 0 failures, `samples.csv` OK.
+  - Upload resumed from the ledger with `--out` set to the new path. Aristotle was not touched.
+- **Rejection rules_v5_d3x10 at 09:17** (user decision after the score-band review): reject when no-data > 0.70, seams > 0.60, colour > 0.75 (user: "set the colour artifacts high") or P(clouds more than half) ≥ 0.50. The user asked for this to apply to every split.
+  - Rejected 1,211 of 18,194: train 1,205, test 6, validation 0. By reason: seams 587, clouds 395, colour 312, no-data 32. By source: SkySat 559, EarthView 319, aerial 303, Maxar 30.
+  - Kept 16,983: train 16,747 / validation 115 / test 121, in 285 shards (277 rewritten), 56.8 GB.
+  - Run folder: `runs/2026-10-20_091720Z_reject` (policy, `before/` manifest and samples.csv, `shard_changes.json` with before/after SHA-256, summary).
+  - Rejected NPZs were moved byte-identically to `rejected/<split>/`, with `rejected/rejected_samples.csv` listing all columns, reasons, origin shard and file SHA-256.
+  - `samples.csv` now lists kept samples only, and `manifest.json` has status FILTERED with a `filter` block.
+  - Checks:
+    - verify passed (285 shards, 16,983 samples, 0 failures);
+    - kept ∪ rejected = the original 18,194 with no overlap, and no rejected ID remains in any shard;
+    - 1,211/1,211 rejected files are intact (SHA-256, sample ID, HR hash from the build record).
+  - The test set lost 6 samples. This is a pre-registered cleaning rule set before any ×10 model was evaluated; report it in the thesis.
+- **Aristotle:** the upload was stopped at 09:16 with 42 old train shards on AUTH.
+  - A Python 3.9 rewrite on AUTH was shown to produce byte-identical TARs to the local rewrite, so the 42 shards were filtered in place: 41 filtered, 1 unchanged. Each one's SHA-256 now equals the new manifest. The stale `00042.tar.partial` was deleted.
+  - Ledger entries were added (method "remote in-place filter").
+  - `upload_d3x10.py` now uploads from `manifest.json` and counts a shard as done only when its ledger SHA-256 equals the manifest's. Rejected pairs are never uploaded.
+  - Upload resumed with the remaining 241 kept-only train/validation shards.
+- No other dataset was changed (Mother, D1–D3 and Jev check were only read).
+- **Manual restore at 10:06** (user reviewed the rejected images and asked to reinstate 88): the list is saved as `rejected/manual_restore_2026-10-20_user_list.txt`; all 88 are train.
+  - By rule they had been rejected for seams 49, colour 37, no-data 1, clouds 1. By source: aerial 43, EarthView 41, Maxar 3, SkySat 1.
+  - `restore_d3x10.py` put each pair back into its original shard at its original build position (72 shards rewritten), then removed its copy from `rejected/`. Run folder: `runs/2026-10-20_100654Z_restore` (before-copies, `shard_changes.json`, `restored_samples.csv`, summary).
+  - `samples.csv` gained the column `restored_by_manual_review` (88 True), and the manifest `filter.manual_restores` records it.
+  - Now kept: 17,071 (train 16,835 / validation 115 / test 121). Rejected: 1,123.
+  - Checks:
+    - verify passed (285 shards, 17,071 samples, 0 failures);
+    - the 88 payloads in the shards are byte-identical to their rejection-time SHA-256, and none remain in `rejected/`;
+    - kept ∪ rejected = 18,194 with no overlap;
+    - 10 shards are now byte-identical to the original build, which confirms the original order.
+- **Aristotle:** the upload was stopped at 10:05 with 55 shards on AUTH. The 23 restored pairs that belong in uploaded shards (18 shards) were sent (~80 MB), and those shards were rebuilt in place; every SHA-256 equals the manifest. Temporary files were removed.
+  - All 55 remote shards were checked with `sha256sum -c` against the current manifest: all match. A first attempt failed only because of CRLF line endings in the locally written checksum list.
+  - Ledger entries were added, and the upload resumed at 10:14 from shard 00055.
+- **Wording correction:** in the rules_v5 entry, "By reason" counted each rejected sample once, under the first matching rule in the order seams, clouds, colour, no-data.
+- **13:14: the PC slept by accident (user report).** The upload log shows no failed attempts and no gap over 5 minutes apart from the deliberate 10:04–10:17 restore pause, so the transfer was not interrupted.
+  - Status: 120/283 shards verified on AUTH, 33.8 GB left (~8 h).
+  - Started `keep_awake_while_uploading.py` as a detached process: SetThreadExecutionState(ES_SYSTEM_REQUIRED). No power setting is changed, and it releases when the uploader exits (log: `keep_awake.log`). It does not prevent a manual Sleep or a closed lid.
+- **Upload complete on 2026-10-20 at 21:17 UTC:** 283 train/validation shards plus `samples.csv` and `manifest.json` on AUTH (53 GB). The keep-awake helper released at 21:17.
+  - **Bug found 2026-10-21:** the uploader's final "ALL_OK" covered only 86 shards. Its SHA256SUMS was inlined in the ssh command and silently cut by the Windows command-line limit (86 lines plus one cut-off line). Each shard had still been SHA-256-verified when it arrived.
+  - Fix: `upload_d3x10.py` now copies SHA256SUMS as a file and checks its line count.
+  - Re-check 2026-10-21 ~06:30 UTC with the complete list (`runs/<full>/SHA256SUMS`, 285 entries = 283 shards + manifest + samples.csv): **285/285 OK**. 283 TARs on disk, no partial files, manifest status FILTERED (train 16,835 / validation 115; test kept local).
+- **2026-10-21: AUTH copy moved to home** (user request): `<cluster scratch>/maritime-d3x10-20261020` → `<cluster home>/maritime-d3x10-20261020`.
+  - It ran as a `nohup` job on AUTH: rsync, then `sha256sum -c`, and the origin was deleted only on a full pass. The log is `~/move_d3x10_20261021.log` on AUTH.
+  - Timeline: copy 06:39–06:48 UTC; verify **285/285 OK** (283 TARs at both source and destination) at 06:59:23; origin deleted at 06:59:33.
+  - Home quota now about 54 GB used of 100 GB. No run folders remain on NVMe scratch.
+  - The VPN's DNS broke during the job, so it was checked by IP with the pinned host key (HostKeyAlias). The job itself was not affected.
+  - `upload_d3x10.py` REMOTE and the README now point to the home path. Note: home is NFS, so training I/O is slower than from NVMe.
+
+## 2026-10-21: ×10 SwinIR training on AUTH Aristotle
+
+- **User decisions:**
+  - classical SwinIR ×10 from scratch, 100,000 updates, using as much of the GPU as possible;
+  - keep only the best and latest checkpoints;
+  - recipe identical to D1–D3 (batch 16, 64×64 LR crops → 640×640 HR, Adam 2e-4, 2k warm-up + cosine to 1e-6, bf16, masked L1), speed from engineering only;
+  - 1 A100, like D1–D3;
+  - ×10 head = SwinIR's ×2 stage + a ×5 pixel-shuffle stage.
+- **D2 evidence that motivated the speed work:** 0.87 updates/s, GPU utilization ~52%, 5.7 of 40 GB used. Causes: 4×4 micro-batching, single-threaded data loading, per-tensor GPU syncs.
+- **Code:** `training/` (local) → AUTH `<cluster home>/d3x10-swinir-x10-100k-20261021`.
+  - Unchanged from D2 (for identical metrics): `metrics.py`, `lpips_metric.py`, `evaluate.py`, `checkpointing.py`, `hpc_store.py`, `visuals.py`, `finalize.py`, and the vendored SwinIR source (sha `9e143898…`). Environment = the D2 pip freeze (torch 2.5.1+cu124).
+  - New: `model_factory.py` (×10 head), `data.py` (byte-offset shard reads, ×10 aligned crops, position-keyed augmentation, parallel workers), `train.py` (one 16-sample pass, single-sync checks, checkpoint every 1,000 updates or 15 minutes, best+latest retention, benchmark mode), `reporting.py`, and the ops scripts.
+  - 48/48 local CPU tests pass, including ×10 crop alignment under all 8 geometries and resume stream reproduction.
+- **Data audit** (job 2701017, PASS 07:35 UTC):
+  - 283/283 shards match the manifest SHA-256; counts 16,835 / 115; no test split on AUTH.
+  - Train and validation share no site, geographic group or acquisition.
+  - The first attempt (2701014) failed only because it started before the runtime existed; the audit now uses the system python3.
+- **Benchmark** (job 2701029, submitted 07:4x UTC, queued) measures the following before step 1, and the settings are frozen from it:
+  - data loader samples/s with 0/6/12 workers;
+  - deterministic vs non-deterministic kernels (updates/s, data-wait fraction, peak memory, nvidia-smi);
+  - validation seconds per image.
+- **Benchmark result** (job 2701029 on cn50, A100-SXM4-40GB, 4 min; 49/49 tests passed on the GPU node):
+  - Loader: 3.2 / 154 / 289 samples/s with 0 / 6 / 12 workers.
+  - Deterministic kernels: 1.98 updates/s. Non-deterministic: **2.57 updates/s** (+30%). GPU util 94–100%, about 22.7 of 40 GB.
+  - Validation took 1.38 s/image, CPU-bound in float64 SSIM.
+- **Frozen before step 1** (`inputs/throughput-decision.json`, rule declared before measuring: use fast kernels if ≥10% faster):
+  - `deterministic_algorithms=False`, cudnn.benchmark on, TF32 off, 12 workers.
+  - Validation scoring runs the unchanged `score_image` in 8 spawn processes. A test proves byte-identical CSV and metrics vs serial scoring; this saves an estimated ~2 h of idle GPU over the run.
+  - Same-process resume is still checked to 1e-6 in the preflight.
+- **Code v2:** 31 files, archive sha256 `a2d68615…`, manifest verified on AUTH; 49/49 tests pass on the AUTH runtime.
+- **Chain started:** initial job **2701603** submitted by `submit_initial.py` (comment `d3x10-initial-20261021`). It was queued on priority at submission.
+- **Training started:** job 2701603 began on cn50 at ~19:41 UTC on 2026-10-21. Check at 19:54 UTC, step 1,156:
+  - Preflight PASS: overfit L1 0.1803 → 0.1189; durable save/reload resume error 0.0; peak GPU 20.9 GB at batch 16.
+  - Validation (115): bicubic 27.320 dB / SSIM 0.5721 / LPIPS 0.8186; random init 13.057 / 0.1773 / 0.7804; step 500 25.587 / 0.5404 / 0.7790; step 1,000 26.049 / 0.5638 / 0.7418. Still below bicubic PSNR, inside warm-up.
+  - Pooled validation took 25.5 s, versus about 160 s serial.
+  - Recent 2.15 updates/s; this includes the first validations and worker warm-up. GPU 99–100% between validations, 23.6 / 40 GB.
+  - Durable checkpoints: only step 1,000 (best = latest).
+  - `after_job.decision` checked against the trainer's status shapes: pause → continue, 100k → finalize, verified export → complete, failure or no progress → stop.
+  - Expected: about 45k updates per 6-hour job; 3 training jobs plus 1 finalization job. The first pause/successor is due ~01:00 UTC on 2026-10-22.
+
+## 2026-10-22: ×10 training progress check (06:38 UTC)
+- **Job 1** (2701603): 19:41–00:57 UTC, 5 h 15 min. It paused at update 44,808 and submitted job 2701760 (`next-from-2701603.json`). Chain: 1 successor, no retries.
+- **Job 2** (2701760): started 04:11 UTC (~3 h 14 min after job 1 ended). At 06:38 UTC: update 65,191, 2.53 updates/s, data wait 0.1%, GPU 95–100%, 23.7/40 GB.
+- Durable checkpoints: best (62,000) and latest (65,000) only.
+- **Validation PSNR / SSIM / LPIPS:**
+  - 10k: 27.19 / 0.5865 / 0.7444
+  - 20k: 27.856 / 0.5898 / 0.7374
+  - 30k: 28.058 / 0.5916 / 0.7339
+  - 40k: 28.037 / 0.5918 / 0.7286
+  - 50k: 28.054 / 0.5925 / 0.7289
+  - 60k: 28.075 / 0.5934 / 0.7260
+  - 64k: 28.078 / 0.5934 / 0.7219
+  - Bicubic: 27.320 / 0.5721 / 0.8186. Best so far: step 62,000, 28.094 dB (+0.77 dB vs bicubic).
+- **Expected:** job 2 pauses at ~88k (~09:26 UTC); job 3 then reaches 100k; then the finalization job.
+- **12:50 UTC on 2026-10-22: automatic thesis archive set up.**
+  - Training reached 100,000 updates at 11:00 UTC (job 2701959). Finalization job 2702044 is queued.
+  - `training/archive_tools/fetch_x10_run.py` runs detached on this PC (pid 37796) and keeps the PC awake while it runs. It:
+    - checks AUTH every 5 minutes;
+    - once `FINALIZED.json` exists, the export is VERIFIED and the queue is empty, downloads the project, the scratch run and the environment (pip freeze, AlexNet, LPIPS calibration);
+    - verifies every file against a SHA-256 inventory made on AUTH;
+    - writes `D3x10-training-complete.tar.gz` and the inventories;
+    - runs `build_x10_package.py` to produce `Desktop\D3x10 run` in the D1/D2 layout.
+  - Package contents:
+    - `models/`: best/final weights with strict-reload checks and a CPU re-inference check;
+    - `reports/`: `thesis-report.html`, figures f01–f07 plus validation panels, tables, per-image CSVs;
+    - `reproducibility/`, README, index and a local inventory.
+  - Signals: `PACKAGE_READY.txt` on success, `ALERT.txt` on any failure.
+- **End-to-end snapshot test before launch (scratchpad, since deleted):**
+  - 573 files downloaded and SHA-verified in ~5 min (~10 MB/s down); package built.
+  - Selected weights re-run on CPU fp32 reproduce the logged GPU validation PSNR to ≤4.3e-8 dB on 2 images; strict reload, tensor-equal readback and cursor = 16×updates all pass.
+  - The figures were checked visually; label overlaps and gap-bridging lines were fixed.
+  - x4 vs x10 gain over bicubic at the selected checkpoint: D1 +0.814, D2 +1.413, D3 +1.375, D3x10 +0.786 dB (snapshot, before the 100k validation).
+
+## 2026-10-23: run finalized, thesis archive `Desktop\D3x10 run` complete
+- **Finalization job** 2702044 completed after ~18 h in the queue. Export VERIFIED. The archiver downloaded 1,128 files (all SHA-256 verified) and built the package at 09:45 UTC.
+- **Final numbers (115 validation images):**
+  - Selected checkpoint: update 72,000, 28.105 dB / SSIM 0.5937 / LPIPS 0.7254. The finalization re-evaluation was identical.
+  - Update 100,000: 28.085 / 0.5939 / 0.7241. Bicubic: 27.320 / 0.5721 / 0.8186.
+  - Gain over bicubic: D3x10 +0.786 dB; D1 +0.814; D2 +1.413; D3 +1.375 (×4).
+- **Comparison folders added** (user request: same layout as the D1 run folder):
+  - **Sentinel-2** (`sentinel2-comparisons` and `sentinel2-additional-ports`, 20 scenes): D3x10 on the exact preserved D3 inputs, next to the copied D3 ×4 outputs. Detail panels use the same 320 m square as D1–D3.
+  - **SkySat:** rebuilt for ×10 (`tools/prepare_skysat_x10.py`). Same scene and spots; 320 m context, area-integrated to 1 m, D3x10 degradation to 10 m. Four edge spots were shifted by up to 72 native px; the shifts are recorded.
+  - **Runtime:** D1's comparison runtime (torch 2.8.0+cpu, numpy 2.2.6, 6 threads, deterministic). 40 ×10 forward pairs were repeat-equal; weights unchanged; `comparison-verification.json` PASS (30 scenes).
+  - **SkySat results** (PSNR / SSIM / LPIPS, gain over same-grid bicubic):
+    - at 1 m: D3x10 best 30.780 / 0.8485 / 0.3597 (+1.884 dB); D3x10 final 30.821 / 0.8491 / 0.3551 (+1.925 dB); bicubic ×10 28.896 / 0.8223 / 0.5758;
+    - at 2.5 m, same 10 m input: D3 ×4 best 32.047 (+2.275 dB); bicubic ×4 29.772.
+- **Archive:** extra top-level logs were moved to `reports/archive-logs`. README, index and the thesis report link the comparisons. Local inventory: 2,168 files, 6.67 GB. Top-level layout identical to the D1 run folder.

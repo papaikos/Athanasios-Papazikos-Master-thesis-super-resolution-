@@ -1,0 +1,54 @@
+{
+  "decision": {
+    "keep": 16983,
+    "remove": 1211
+  },
+  "remove_reason": {
+    "defect_seams": 587,
+    "defect_color_artifacts": 312,
+    "mostly_clouds": 395,
+    "defect_nodata": 32
+  },
+  "candidates_among_keep": {
+    "featureless_open_sea": 1584,
+    "inland": 519,
+    "uncertain_maritime_subject": 410
+  },
+  "source_kind_keep": {
+    "skysat_raw_window": 2840,
+    "earthview": 6147,
+    "aerial_rgb": 7271,
+    "maxar": 725
+  },
+  "split_keep": {
+    "train": 16747,
+    "validation": 115,
+    "test": 121
+  },
+  "scene": {
+    "marina": 1385,
+    "open_sea": 2305,
+    "natural_coast": 6094,
+    "port": 4144,
+    "mostly_cloud": 345,
+    "inland": 425,
+    "built_coast": 2545,
+    "river_or_estuary": 661,
+    "lake": 290
+  },
+  "candidates_among_remove": {
+    "featureless_open_sea": 134,
+    "uncertain_maritime_subject": 83,
+    "inland": 247
+  },
+  "source_kind_remove": {
+    "skysat_raw_window": 559,
+    "earthview": 319,
+    "aerial_rgb": 303,
+    "maxar": 30
+  },
+  "split_remove": {
+    "train": 1205,
+    "test": 6
+  }
+}

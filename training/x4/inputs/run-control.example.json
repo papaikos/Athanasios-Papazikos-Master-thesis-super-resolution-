@@ -1,0 +1,16 @@
+{
+  "schema": "aristotle-d2-confirmation-v1",
+  "run_id": "maritime-d2-swinir-100k-20261014",
+  "t0_utc": "2026-10-14T11:29:01.633168+00:00",
+  "target_updates": 100000,
+  "training_seed": 42,
+  "dataset_recipe": "d2-gaussian-area-context-v1",
+  "selected_gpu": "NVIDIA A100 40GB",
+  "checkpoint_retention": "best-latest",
+  "backend": "filesystem",
+  "original_d3_source_sha256": "d93c79edcc3ff35c316efaac791f271bc043a0d916622d4b637c3da3c4578762",
+  "original_science_source_sha256": "10e0a5a964670f7b5d028fbed9114a3d55db63b1ac00d8d582ab40c7833c3203",
+  "mother_excluded": true,
+  "test_usage": "sealed, no training or selection",
+  "scientific_comparison": "Same D1/D3 protocol; fresh D2 scratch initialization, seed 42, effective batch 16. D2 SHA-shard order differs, so individual sample exposures are not paired."
+}
